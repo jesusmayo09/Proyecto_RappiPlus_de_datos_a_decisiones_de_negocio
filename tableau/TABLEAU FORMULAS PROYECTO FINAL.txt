@@ -1,0 +1,39 @@
+TABLEAU CALCULATED FIELDS PROYECTO FINAL
+
+Ingreso Total = SUM([Monto Total])
+
+Costo Total = SUM([Cantidad] * [Costo Unitario])
+
+Costo Marketing = SUM([Gasto])
+
+Profit = [Ingreso Total] - ([Costo Total] + [Costo Marketing])
+
+Cantidad Promedio Productos = SUM([cantidad]) / COUNTD([id_pedido])
+
+Margen Bruto = [Ingreso Total] - [Costo Total]
+
+Unidades Vendidas = SUM([cantidad])
+
+Cantidad Ventas = COUNTD([cantidad])
+
+Ventas QTD = 
+
+Ventas Trimestre Actual = 
+
+IF DATEDIFF('quarter', [Fecha], {MAX([Fecha])}) = 0 
+THEN [monto_total] 
+ELSE 0 
+END
+
+Ventas Trimestre Anterior = 
+
+IF DATEDIFF('quarter', [Fecha], {MAX([Fecha])}) = 1 
+THEN [monto_total] 
+ELSE 0 
+END
+
+QoQ % = 
+
+(SUM([Ventas Trimestre Actual]) - SUM([Ventas Trimestre Anterior])) 
+/ 
+SUM([Ventas Trimestre Anterior])

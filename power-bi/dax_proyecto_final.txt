@@ -1,0 +1,264 @@
+// Tabla de fechas para análisis temporal
+
+Dim_Fecha =
+ADDCOLUMNS(
+    CALENDAR(
+      MIN(orders_clean[fecha_hora_pedido]), 
+      MAX(orders_clean[fecha_hora_pedido])
+      ),
+    "Año", YEAR([Date]),
+    "Mes", FORMAT([Date], "MMMM"),
+    "Mes Numero", MONTH([Date]),
+    "Año-Mes", FORMAT([Date], "YYYY-MM")
+)
+
+// Calcular el ingreso total (total revenue)
+
+Ingreso Total = SUMX(
+    orders_clean,
+    orders_clean[monto_total]
+)
+
+// Calcular la cantidad de ventas
+
+Cantidad Ventas = DISTINCTCOUNT(orders_clean[id_pedido])
+
+// Calcular Cantidad de Unidades Vendidas
+
+Unidades Vendidas = SUM(orders_clean[cantidad])
+
+// Calcular el costo total (total cost)
+
+Costo Total = 
+
+SUMX(
+    orders_clean, 
+    orders_clean[cantidad] * RELATED(catalog_clean[costo_unitario])
+)
+
+// Cuanto se ha invertido en marketing?
+
+Costo Marketing = SUMX(
+    marketing_clean,
+    marketing_clean[gasto]
+)
+
+// Calcular el beneficio (profit)
+
+Profit = [Ingreso Total] - ([Costo Total] + [Costo Marketing])
+
+// Calcular el ticket promedio por orden (average ticket per order)
+
+Ticket_Promedio = 
+
+DIVIDE(
+    SUM(orders_clean[monto_total]),            -- Suma todo el dinero
+    DISTINCTCOUNT(orders_clean[id_pedido]),     -- Cuenta cuántos pedidos distintos hubo
+    0
+)
+
+// Calcular la cantidad promedio de productos por orden
+
+Cantidad Promedio Productos = 
+
+DIVIDE(
+    SUM(orders_clean[cantidad]),               -- Suma la cantidad total de productos
+    DISTINCTCOUNT(orders_clean[id_pedido]),     -- Cuenta cuántos pedidos distintos hubo
+    0
+)
+
+// Calcular el producto mas vendido
+
+Producto Mas Vendido = 
+
+VAR Top1_Producto = 
+    TOPN(
+        1,                                          -- Queremos solo el top 1
+        VALUES(orders_clean[nombre_producto]),      -- Obtenemos la lista de productos únicos
+        CALCULATE(SUM(orders_clean[cantidad])),     -- La métrica para ordenarlos (suma de cantidades)
+        DESC                                        -- Orden descendente (de mayor a menor)
+    )
+RETURN
+    CONCATENATEX(Top1_Producto, orders_clean[nombre_producto], ", ")
+
+// Calcular cuanto se ha gastado en marketing por canal
+
+Gasto Marketing por Canal % = 
+
+DIVIDE(
+  SUM(marketing_clean[gasto]),
+  CALCULATE(
+    SUM(marketing_clean[gasto]),
+    ALL(marketing_clean[canal])
+  ),
+  0
+)
+
+
+// Tooltip Margen Bruto Categoria
+
+Margen Bruto Categoria = 
+
+DIVIDE(
+  SUM(orders_clean[monto_total]) - SUMX(orders_clean, orders_clean[cantidad] * RELATED(catalog_clean[costo_unitario])),
+  CALCULATE(
+    SUM(orders_clean[monto_total]) - SUMX(orders_clean, orders_clean[cantidad] * RELATED(catalog_clean[costo_unitario])),
+    ALL(catalog_clean[categoria_producto])
+  ),
+  0
+)
+
+Margen Bruto Categoria % = 
+
+DIVIDE(
+    [Margen Bruto],
+    CALCULATE(
+        [Margen Bruto], 
+        ALL(catalog_clean[categoria_producto])
+    ),
+    0
+)
+
+Unidades Vendidas % = 
+
+DIVIDE(
+    [Unidades Vendidas],
+    CALCULATE(
+        [Unidades Vendidas],
+        ALL(catalog_clean[nombre_producto])
+    ),
+    0
+)
+
+// Calcular ventas ano anterior
+
+Ventas Ano Anterior = 
+
+CALCULATE(
+  SUM(orders_clean[monto_total]),
+  DATEADD(Dim_Fecha[Date], -1, YEAR)
+)
+
+// Calcular ventas mes anterior
+
+Ventas Mes Anterior =
+
+CALCULATE(
+  SUM(orders_clean[monto_total]),
+  DATEADD(Dim_Fecha[Date], -1, MONTH)
+)
+
+// Calcular ventas trimestre anterior
+
+Ventas Trimestre Anterior =
+
+CALCULATE(
+  SUM(orders_clean[monto_total]),
+  DATEADD(Dim_Fecha[Date], -1, QUARTER)
+)
+
+// Calcular ventas MTD
+
+Ventas MTD = 
+
+TOTALMTD(
+    SUM(orders_clean[monto_total]), 
+    Dim_Fecha[Date]
+)
+
+// Calculas ventas YTD
+
+Ventas YTD =
+
+TOTALYTD(
+    SUM(orders_clean[monto_total]), 
+    Dim_Fecha[Date]
+)
+
+// Calcular ventas QTD
+
+Ventas QTD = 
+TOTALQTD(
+    SUM(orders_clean[monto_total]), 
+    Dim_Fecha[Date]
+)
+
+// Calcular crecimiento YoY % 
+
+Crecimiento YoY % =
+
+DIVIDE(
+    [Ventas YTD] - [Ventas Ano Anterior], 
+    [Ventas Ano Anterior],
+    0
+)
+
+// Calcular crecimiento MoM %
+
+Crecimiento MoM % =
+
+DIVIDE(
+    [Ventas MTD] - [Ventas Mes Anterior],
+    [Ventas Mes Anterior],
+    0
+)
+
+// Calcular crecimiento QoQ %
+
+Crecimiento QoQ % =
+
+DIVIDE(
+    [Ventas QTD] - [Ventas Trimestre Anterior],
+    [Ventas Trimestre Anterior],
+    0
+)
+
+// Calcular ventas Q1
+
+Ventas Q1 =
+
+CALCULATE(
+    SUM(orders_clean[monto_total]),
+    FILTER(
+        Dim_Fecha,
+        Dim_Fecha[Mes Numero] >= 1 && Dim_Fecha[Mes Numero] <= 3
+    )
+)
+
+// Calcular ventas Q2
+
+Ventas Q2 =
+
+CALCULATE(
+    SUM(orders_clean[monto_total]),
+    FILTER(
+        Dim_Fecha,
+        Dim_Fecha[Mes Numero] >= 4 && Dim_Fecha[Mes Numero] <= 6
+    )
+)
+
+// Crear table Dim_Canal
+
+Dim_Canal = 
+
+DISTINCT(
+    UNION(
+        VALUES(marketing_clean[canal]),
+        VALUES(orders_clean[fuente_referencia])
+    )
+)
+
+// Crear tabla Dim_Pais
+
+Dim_Pais = 
+
+DISTINCT(
+    UNION(
+        VALUES(marketing_clean[pais]),
+        VALUES(orders_clean[pais])
+    )
+)
+
+// Calcular Margen Bruto
+
+Margen Bruto = [Ingreso Total] - [Costo Total]
