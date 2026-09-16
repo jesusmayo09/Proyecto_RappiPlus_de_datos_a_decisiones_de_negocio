@@ -139,17 +139,23 @@ A partir de los tres datasets limpios (`orders_clean`, `catalog_clean`, `marketi
 - **Gráfico de columnas agrupadas** — "Margen Bruto por Categoría de Producto".
 - **Segmentador** de país.
 
+![Main Dashboard](power-bi/img/main_dashboard.png)
+
 ### 2️⃣ Detalle
 - **Tabla** — "Rendimiento por Producto": unidades vendidas, cantidad de ventas, ingreso total, costo total y margen bruto por producto.
 - **Tabla** — "Retorno de Inversión (ROI) por Región": ingreso total, costo total, costo de marketing y profit por país y canal.
 - **Gráfico de líneas** — "Cantidad de Ventas por Categoría por Mes".
 - **Segmentadores:** país, categoría de producto, canal, y jerarquía de fecha (trimestre/mes).
 
+![Detailed Dashboard](power-bi/img/detailed_dashboard.png)
+
 ### 3️⃣ Pedidos
 - **Tarjetas KPI:** Ingreso Total, Cantidad Promedio de Productos.
 - **Tabla** de pedidos por producto y categoría (unidades vendidas, cantidad de ventas).
 - **Gráfico de líneas** — "Cantidad de Unidades Vendidas por Mes".
 - **Gráfico de líneas** — "Cantidad de Pedidos por Mes".
+- 
+![Dill-Through View Dashboard](power-bi/img/drill_through_view.png)
 
 ---
 
